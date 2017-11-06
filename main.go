@@ -1,84 +1,92 @@
 package main
 
-import(
-  "os"
-  "fmt"
-  "time"
-  "math/rand"
-  "strings"
-  "github.com/dghubble/go-twitter/twitter"
-  "github.com/dghubble/oauth1"
+import (
+	"fmt"
+	"github.com/dghubble/go-twitter/twitter"
+	"github.com/dghubble/oauth1"
+	"math/rand"
+	"os"
+	"strings"
+	"time"
 )
 
 const space = "\U00003000"
 
-const sun = "\U00002600"
-const moon = "\U0001F315"
-const cloud = "\U00002601"
+const sun = "☀️"
+const moon = "🌕"
+const cloud = "☁️"
 
-//Bald Eagle, Dove, Duck, Bird
-var midSkyByDay = [4]string {"\U0001F985", "\U0001F54A", "\U0001F986", "\U0001F426"}
+var midSkyByDay = []string{"🦅", "🦆", "🕊", "🐦"}
 
-//Bee, Butterfly
-var lowSkyByDay = [2]string {"\U0001F41D", "\U0001F98B"}
+var lowSkyByDay = []string{"🐝", "🦋"}
 
 func main() {
-  config := oauth1.NewConfig(os.Getenv("CONSUMER_KEYS"), os.Getenv("CONSUMER_SECRET"))
-  token := oauth1.NewToken(os.Getenv("ACCESS_TOKEN"), os.Getenv("ACCESS_SECRET"))
-  // http.Client will automatically authorize Requests
-  httpClient := config.Client(oauth1.NoContext, token)
-
-  // twitter client
-  client := twitter.NewClient(httpClient)
-  client.Statuses.Update(fmt.Sprintf("%s%s%s%s\n\n%s%s", sunOrMoon(), clouds(), midSky(), midSky(), lowSky(), lowSky()), nil)
+	r := newlySeededRandom()
+	status := fmt.Sprintf("%s\n%s\n%s\n%s%s\n%s\n%s\n%s", sunOrMoon(), clouds(r),
+		midSky(r), midSky(r), space, space, lowSky(r), lowSky(r))
+	if os.Getenv("DEVELOPMENT") == "TRUE" {
+		println(status)
+		return
+	}
+	config := oauth1.NewConfig(os.Getenv("CONSUMER_KEYS"), os.Getenv("CONSUMER_SECRET"))
+	token := oauth1.NewToken(os.Getenv("ACCESS_TOKEN"), os.Getenv("ACCESS_SECRET"))
+	httpClient := config.Client(oauth1.NoContext, token)
+	client := twitter.NewClient(httpClient)
+	client.Statuses.Update(status, nil)
 }
 
-func sunOrMoon() (string) {
-  t := time.Now().UTC()
-  h := t.Hour()
-  if (h >= 5 && h < 19) {
-    return fmt.Sprintf("    %s    \n", sun)
-  }
-  return fmt.Sprintf("    %s    \n", moon)
+func sunOrMoon() string {
+	t := time.Now().UTC()
+	h := t.Hour()
+	r := row()
+
+	if h >= 5 && h < 19 {
+		r[4] = sun
+	} else {
+		r[4] = moon
+	}
+	return joinRow(r)
 }
 
-func clouds() (string) {
-  r := newlySeededRandom()
-  c := r.Intn(9)
-  cT := []string {space, space, space, space, space, space, space, space, space, "\n"}
+func clouds(r *rand.Rand) string {
+	cT := row()
+	c := r.Intn(len(cT))
 
-  for i := 0; i < c; i++ {
-		cT[r.Intn(9)] = cloud
+	for i := 0; i < c; i++ {
+		cT[r.Intn(len(cT))] = cloud
 	}
 
-  return strings.Join(cT, "")
+	return joinRow(cT)
 }
 
-func midSky() (string) {
-  r := newlySeededRandom()
-  m := r.Intn(5)
-  mT := []string {space, space, space, space, space, space, space, space, space, "\n"}
+func midSky(r *rand.Rand) string {
+  return sky(midSkyByDay, r)
+}
 
-  for i := 0; i < m; i++ {
-		mT[r.Intn(9)] = midSkyByDay[r.Intn(4)]
+func lowSky(r *rand.Rand) string {
+		return sky(lowSkyByDay, r)
+}
+
+func sky(animals []string, rand *rand.Rand) (string) {
+  n := rand.Intn(3)
+	r := row()
+  lA := len(animals)
+	for i := 0; i < n; i++ {
+		r[rand.Intn(lA)] = animals[rand.Intn(lA)]
 	}
 
-  return strings.Join(mT, "")
+	return joinRow(r)
 }
 
-func lowSky() (string) {
-  r := newlySeededRandom()
-  l := r.Intn(5)
-  lT := []string {space, space, space, space, space, space, space, space, space, "\n"}
-
-  for i := 0; i < l; i++ {
-		lT[r.Intn(9)] = lowSkyByDay[r.Intn(2)]
-	}
-
-  return strings.Join(lT, "")
+func newlySeededRandom() *rand.Rand {
+	s := rand.NewSource(time.Now().UnixNano())
+	return rand.New(s)
 }
 
-func newlySeededRandom() (*rand.Rand) {
-  s := rand.NewSource(time.Now().UnixNano())
-  return rand.New(s)
+func row() []string {
+	return []string{space, space, space, space, space, space, space, space, space}
+}
+
+func joinRow(r []string) string {
+	return strings.Join(r, "")
 }
