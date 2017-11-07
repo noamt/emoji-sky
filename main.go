@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
+	"log"
 	"math/rand"
 	"os"
 	"strings"
@@ -21,18 +22,32 @@ var midSkyByDay = []string{"🦅", "🦆", "🕊", "🐦"}
 var lowSkyByDay = []string{"🐝", "🦋"}
 
 func main() {
+	for {
+		printTheSky()
+		time.Sleep(1 * time.Hour)
+	}
+}
+
+func printTheSky() {
 	r := newlySeededRandom()
 	status := fmt.Sprintf("%s\n%s\n%s\n%s%s\n%s\n%s\n%s", sunOrMoon(), clouds(r),
 		midSky(r), midSky(r), space, space, lowSky(r), lowSky(r))
 	if os.Getenv("DEVELOPMENT") == "TRUE" {
+		log.Println("Printing status to stdout")
 		println(status)
 		return
 	}
-	config := oauth1.NewConfig(os.Getenv("CONSUMER_KEYS"), os.Getenv("CONSUMER_SECRET"))
+
+	log.Println("Posting status to Twitter")
+	config := oauth1.NewConfig(os.Getenv("CONSUMER_KEY"), os.Getenv("CONSUMER_SECRET"))
 	token := oauth1.NewToken(os.Getenv("ACCESS_TOKEN"), os.Getenv("ACCESS_SECRET"))
 	httpClient := config.Client(oauth1.NoContext, token)
 	client := twitter.NewClient(httpClient)
-	client.Statuses.Update(status, nil)
+	_, _, err := client.Statuses.Update(status, nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func sunOrMoon() string {
@@ -60,17 +75,17 @@ func clouds(r *rand.Rand) string {
 }
 
 func midSky(r *rand.Rand) string {
-  return sky(midSkyByDay, r)
+	return sky(midSkyByDay, r)
 }
 
 func lowSky(r *rand.Rand) string {
-		return sky(lowSkyByDay, r)
+	return sky(lowSkyByDay, r)
 }
 
-func sky(animals []string, rand *rand.Rand) (string) {
-  n := rand.Intn(3)
+func sky(animals []string, rand *rand.Rand) string {
+	n := rand.Intn(3)
 	r := row()
-  lA := len(animals)
+	lA := len(animals)
 	for i := 0; i < n; i++ {
 		r[rand.Intn(lA)] = animals[rand.Intn(lA)]
 	}
