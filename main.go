@@ -22,10 +22,7 @@ var midSkyByDay = []string{"🦅", "🦆", "🕊", "🐦"}
 var lowSkyByDay = []string{"🐝", "🦋"}
 
 func main() {
-	for {
-		printTheSky()
-		time.Sleep(1 * time.Hour)
-	}
+	printTheSky()
 }
 
 func printTheSky() {
