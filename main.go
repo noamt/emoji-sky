@@ -82,9 +82,10 @@ func lowSky(r *rand.Rand) string {
 func sky(animals []string, rand *rand.Rand) string {
 	n := rand.Intn(3)
 	r := row()
+	lR := len(r)
 	lA := len(animals)
 	for i := 0; i < n; i++ {
-		r[rand.Intn(lA)] = animals[rand.Intn(lA)]
+		r[rand.Intn(lR)] = animals[rand.Intn(lA)]
 	}
 
 	return joinRow(r)
