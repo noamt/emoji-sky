@@ -18,8 +18,10 @@ const moon = "🌕"
 const cloud = "☁️"
 
 var midSkyByDay = []string{"🦅", "🦆", "🕊", "🐦"}
+var midSkyByNight = []string{"🦉"}
 
 var lowSkyByDay = []string{"🐝", "🦋"}
+var lowSkyByNight = []string{"🦇"}
 
 func main() {
 	printTheSky()
@@ -27,8 +29,11 @@ func main() {
 
 func printTheSky() {
 	r := newlySeededRandom()
-	status := fmt.Sprintf("%s\n%s\n%s\n%s%s\n%s\n%s\n%s", sunOrMoon(), clouds(r),
-		midSky(r), midSky(r), space, space, lowSky(r), lowSky(r))
+	t := time.Now().UTC()
+	h := t.Hour()
+
+	status := fmt.Sprintf("%s\n%s\n%s\n%s%s\n%s\n%s\n%s", sunOrMoon(h), clouds(r),
+		midSky(r, h), midSky(r, h), space, space, lowSky(r, h), lowSky(r, h))
 	if os.Getenv("DEVELOPMENT") == "TRUE" {
 		log.Println("Printing status to stdout")
 		println(status)
@@ -47,12 +52,10 @@ func printTheSky() {
 	}
 }
 
-func sunOrMoon() string {
-	t := time.Now().UTC()
-	h := t.Hour()
+func sunOrMoon(hour int) string {
 	r := row()
 
-	if h >= 5 && h < 19 {
+	if isDay(hour) {
 		r[4] = sun
 	} else {
 		r[4] = moon
@@ -71,12 +74,18 @@ func clouds(r *rand.Rand) string {
 	return joinRow(cT)
 }
 
-func midSky(r *rand.Rand) string {
-	return sky(midSkyByDay, r)
+func midSky(r *rand.Rand, hour int) string {
+	if isDay(hour) {
+		return sky(midSkyByDay, r)
+	}
+	return sky(midSkyByNight, r)
 }
 
-func lowSky(r *rand.Rand) string {
-	return sky(lowSkyByDay, r)
+func lowSky(r *rand.Rand, hour int) string {
+	if isDay(hour) {
+		return sky(lowSkyByDay, r)
+	}
+	return sky(lowSkyByNight, r)
 }
 
 func sky(animals []string, rand *rand.Rand) string {
@@ -102,4 +111,8 @@ func row() []string {
 
 func joinRow(r []string) string {
 	return strings.Join(r, "")
+}
+
+func isDay(h int) bool {
+	return h >= 5 && h < 19
 }
