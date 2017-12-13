@@ -1,0 +1,20 @@
+= Emoji Sky
+
+A twitter bot inspired by https://twitter.com/EmojiAquarium[@EmojiAquarium]. 
+
+This bot posts an emoji drawing of the sky once an hour.
+
+Drawings will show the sun shining with different birds and insects flying around during UTC day time, and the moon with bats and owls flying around during night time.
+
+== Building
+
+`go build`
+
+== Running in development
+
+Draw a snapshot and print it to the terminal using
+`DEVELOPMENT=TRUE ./emoji-sky`
+
+== Deploying
+
+`git push heroku master`
